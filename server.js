@@ -4,7 +4,10 @@ const LRU = require('lru-cache')
 const express = require('express')
 const favicon = require('serve-favicon')
 const compression = require('compression')
+const bodyParser = require('body-parser')
+const moment = require('moment')
 const microcache = require('route-cache')
+const plaid = require('plaid')
 const resolve = file => path.resolve(__dirname, file)
 const { createBundleRenderer } = require('vue-server-renderer')
 
@@ -69,6 +72,7 @@ app.use('/dist', serve('./dist', true))
 app.use('/public', serve('./public', true))
 app.use('/manifest.json', serve('./manifest.json', true))
 app.use('/service-worker.js', serve('./dist/service-worker.js'))
+app.use(bodyParser.json())
 
 // since this app has no user-specific content, every page is micro-cacheable.
 // if your app involves user-specific content, you need to implement custom
@@ -115,6 +119,62 @@ function render (req, res) {
 app.get('*', isProd ? render : (req, res) => {
   readyPromise.then(() => render(req, res))
 })
+
+let PUBLIC_TOKEN = null;
+let ACCESS_TOKEN = null;
+let ITEM_ID = null;
+
+let PLAID_CLIENT_ID = "5a150929bdc6a46838fe6677"
+let PLAID_SECRET = "ebff980409fe8fa1a922c93a679c9d"
+let PLAID_PUBLIC_KEY = "c9968cf932e1aee4ae2d3b776b2231"
+let PLAID_ENV = "sandbox"
+
+let client = new plaid.Client(
+  PLAID_CLIENT_ID,
+  PLAID_SECRET,
+  PLAID_PUBLIC_KEY,
+  plaid.environments[PLAID_ENV]
+);
+
+app.post('/get_access_token', function(request, response, next) {
+  PUBLIC_TOKEN = request.body.public_token;
+  console.dir(request.body)
+  console.dir(PUBLIC_TOKEN)
+  client.exchangePublicToken(PUBLIC_TOKEN, function(error, tokenResponse) {
+    if (error != null) {
+      var msg = 'Could not exchange public_token!';
+      return response.json({
+        error: msg
+      });
+    }
+    ACCESS_TOKEN = tokenResponse.access_token;
+    ITEM_ID = tokenResponse.item_id;
+    console.log('Access Token: ' + ACCESS_TOKEN);
+    console.log('Item ID: ' + ITEM_ID);
+    response.json({
+      'error': false
+    });
+  });
+});
+
+app.post('/transactions', function(request, response, next) {
+  // Pull transactions for the Item for the last 30 days
+  var startDate = moment().subtract(30, 'days').format('YYYY-MM-DD');
+  var endDate = moment().format('YYYY-MM-DD');
+  client.getTransactions(ACCESS_TOKEN, startDate, endDate, {
+    count: 250,
+    offset: 0,
+  }, function(error, transactionsResponse) {
+    if (error != null) {
+      return response.json({
+        error: error
+      });
+    }
+    console.log('pulled ' + transactionsResponse.transactions.length + ' transactions');
+    console.dir(transactionsResponse);
+    response.json(transactionsResponse);
+  });
+});
 
 const port = process.env.PORT || 8080
 app.listen(port, () => {

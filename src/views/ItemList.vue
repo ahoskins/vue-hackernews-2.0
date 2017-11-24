@@ -1,6 +1,8 @@
 <template>
   <div class="news-view">
     <div class="news-list-nav">
+      <button v-on:click="linkAccount">Link Account</button>
+      <button v-on:click="getTransactions">Get Transactions</button>      
       <router-link v-if="page > 1" :to="'/' + type + '/' + (page - 1)">&lt; prev</router-link>
       <a v-else class="disabled">&lt; prev</a>
       <span>{{ page }}/{{ maxPage }}</span>
@@ -10,7 +12,7 @@
     <transition :name="transition">
       <div class="news-list" :key="displayedPage" v-if="displayedPage > 0">
         <transition-group tag="ul" name="item">
-          <item v-for="item in displayedItems" :key="item.id" :item="item">
+          <item v-for="item in transactions" :key="item.name" :item="item">
           </item>
         </transition-group>
       </div>
@@ -37,7 +39,8 @@ export default {
     return {
       transition: 'slide-right',
       displayedPage: Number(this.$route.params.page) || 1,
-      displayedItems: this.$store.getters.activeItems
+      displayedItems: this.$store.getters.activeItems,
+      transactions: []
     }
   },
 
@@ -78,6 +81,47 @@ export default {
   },
 
   methods: {
+    linkAccount () {
+      const { constants } = this.$store.state
+      const { PLAID_CLIENT_ID, PLAID_SECRET, PLAID_PUBLIC_KEY, PLAID_ENV } = constants
+
+      var handler = Plaid.create({
+        apiVersion: 'v2',
+        clientName: 'Plaid Walkthrough Demo',
+        env: PLAID_ENV,
+        product: ['transactions'],
+        key: PLAID_PUBLIC_KEY,
+        onSuccess: function(public_token) {
+          fetch("/get_access_token", {
+            method: "POST",
+            headers: {
+              'Accept': 'application/json, text/plain, */*',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              public_token: public_token
+            })
+          }).then((response) => {
+            console.log("success getting access token on server")
+          });
+        },
+      });
+
+      handler.open()
+    },
+    
+    getTransactions () {
+      fetch("/transactions", {
+        method: "POST"
+      })
+      .then((response) => {
+        return response.json()
+      })
+      .then((data) => {
+        this.transactions = data.transactions
+      })
+    },
+    
     loadItems (to = this.page, from = -1) {
       this.$bar.start()
       this.$store.dispatch('FETCH_LIST_DATA', {
