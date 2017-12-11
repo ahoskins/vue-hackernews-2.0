@@ -3,12 +3,6 @@
     <div class="news-list-nav">
       <button v-on:click="linkAccount">Link Account</button>
       <button v-on:click="getTransactions">Get Transactions</button>      
-      <router-link v-if="page > 1" :to="'/' + type + '/' + (page - 1)">&lt; prev</router-link>
-      <a v-else class="disabled">&lt; prev</a>
-      <span>{{ page }}/{{ maxPage }}</span>
-      <router-link :to="'treemap'">Treemap</router-link>
-      <router-link v-if="hasMore" :to="'/' + type + '/' + (page + 1)">more &gt;</router-link>
-      <a v-else class="disabled">more &gt;</a>
     </div>
     <transition :name="transition">
       <div class="news-list" :key="displayedPage" v-if="displayedPage > 0">
