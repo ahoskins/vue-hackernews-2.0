@@ -127,7 +127,7 @@ let ITEM_ID = null;
 let PLAID_CLIENT_ID = "5a150929bdc6a46838fe6677"
 let PLAID_SECRET = "ebff980409fe8fa1a922c93a679c9d"
 let PLAID_PUBLIC_KEY = "c9968cf932e1aee4ae2d3b776b2231"
-let PLAID_ENV = "sandbox"
+let PLAID_ENV = "development"
 
 let client = new plaid.Client(
   PLAID_CLIENT_ID,
@@ -141,6 +141,7 @@ app.post('/get_access_token', function(request, response, next) {
   console.dir(request.body)
   console.dir(PUBLIC_TOKEN)
   client.exchangePublicToken(PUBLIC_TOKEN, function(error, tokenResponse) {
+    console.dir(error)
     if (error != null) {
       var msg = 'Could not exchange public_token!';
       return response.json({

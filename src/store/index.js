@@ -13,7 +13,7 @@ export function createStore () {
         PLAID_CLIENT_ID: "5a150929bdc6a46838fe6677",
         PLAID_SECRET: "ebff980409fe8fa1a922c93a679c9d",
         PLAID_PUBLIC_KEY: "c9968cf932e1aee4ae2d3b776b2231",
-        PLAID_ENV: "sandbox",
+        PLAID_ENV: "development",
         GOOGLE_CUSTOM_SEARCH_KEY: "AIzaSyBHaKiNHrMsH__GK5tkNfaQ01UDcTsCCCc"
       },
       activeType: null, 

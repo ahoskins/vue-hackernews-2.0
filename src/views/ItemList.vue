@@ -106,6 +106,9 @@ export default {
             console.log("success getting access token on server")
           });
         },
+        onError: function(error) {
+          consol.log(error);
+        }
       });
 
       handler.open()
