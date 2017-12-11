@@ -17,6 +17,7 @@
         {{ item.date }}
       </span>
     </span>
+    <div>{{ item.location }}</div>        
   </li>
 </template>
 
