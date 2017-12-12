@@ -34,6 +34,7 @@ export default {
 
   beforeMount () {
     this.fetchImage()
+    // test commit
   },
 
   data () {
